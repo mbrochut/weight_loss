@@ -404,5 +404,3 @@ if __name__ == '__main__':
         for model in ['E. coli', 'S. pneumoniae', 'Listeria','Staphylococcus aureus','H1N1','C. albicans']:
             df_unique_model = choose_group_and_df_Type(df,censored=False,training=0,Infection=[model],start_date=datetime(2010,4,11))
             count_p_values_per_thr(df_unique_model,save=True,path_to_save='./result_p_values/models/{}_2023_new_time_update.xlsx'.format(model),resume=True)
-
-    #OLD CODE
