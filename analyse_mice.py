@@ -205,7 +205,6 @@ def string_to_list(s):
 if __name__ == '__main__':
     df = pd.read_excel('./DF_for_simulation/df_2023_max14days_new_time_calculation_H0.xlsx',index_col=0,parse_dates=['Date'])
     
-
     #remove data from anesthesia
     df = df[~df.loc[:,"weight_T_infection":"weight_T14"].apply(lambda x: x.astype(str).str.contains('ane')).any(axis=1)]
     
@@ -227,7 +226,7 @@ if __name__ == '__main__':
     #--------------
     #add chi2 tests
     #--------------
-    """pivot_table = pivot_table.reset_index()
+    pivot_table = pivot_table.reset_index()
     chi_result = pivot_table.groupby("Infection").apply(lambda x: chi_square_in_lambda_function(x))
     chi_result = chi_result.reset_index()
     pivot_table["p_values"] = chi_result[0]
@@ -252,7 +251,7 @@ if __name__ == '__main__':
     bas_stat_NO_LD = basic_stats(df_of_interest_NO_LD,start_date=datetime(2010,5,1),save=False,save_name='')
     print(df_of_interest['Strain'].value_counts()) # count strains
     print(df_of_interest[df_of_interest['Experiment'].str.contains("Training")].groupby("Infection")['Experiment'].nunique())
-    print(bas_stat)"""
+    print(bas_stat)
     #df_of_interest['Strain'].value_counts().to_excel("./result_number_mice_per_infection/STRAIN.xlsx")
     #bas_stat.to_excel("./result_number_mice_per_infection/data_of_interest_summary_NoANE_withLD.xlsx")
     #bas_stat_NO_LD.to_excel("./result_number_mice_per_infection/data_of_interest_summary_NoANE_NoLD.xlsx")
@@ -294,82 +293,3 @@ if __name__ == '__main__':
     df_res_with_scores = find_number_of_mice_that_die_due_to_maxlossweight(df_of_interest,start_date=datetime(2012,5,1))
     print(df_res_with_scores)
     #df_res_with_scores.to_excel("./autre/mortality_by_score_or_weight.xlsx")
-#--------------OLD CODE-------------
-
-"""    
-def formatting_loss_weight_df(df):
-    serie_number_mice = df['original_survival'].value_counts()
-    serie_percentage_mice = df['original_survival'].value_counts(normalize=True)
-    serie_percentage_mice.index = [n+'_in_%' for n in serie_percentage_mice.index.values]
-    df_result_percentage = pd.concat([serie_number_mice,serie_percentage_mice])
-    return df_result_percentage
-
-def weight_loss_percentage(df,percentage):
-    #Name of index for graphic
-    index = ["{}% - {}%".format(n*100,percentage[idx+1]*100) if idx < len(percentage)-1 else '>{}%'.format(100*n) for idx, n in enumerate(percentage)]
-    index = ["<{}%".format(percentage[0]*100)] + index
-    
-    dict_weight_loss = {}
-    left_born = 2
-    for id_percentage, n in enumerate(percentage):
-        right_born = 1-n
-        df_per = df[(df['max_loss_weight_percentage']<left_born) & (df['max_loss_weight_percentage']>=right_born)]
-        df_result_percentage = formatting_loss_weight_df(df_per)
-        dict_weight_loss[index[id_percentage]]= df_result_percentage
-        left_born = right_born
-    
-    df_per = df[df['max_loss_weight_percentage']<=left_born]
-    df_result_percentage = formatting_loss_weight_df(df_per)
-    dict_weight_loss[index[-1]]= df_result_percentage
-    df_w_l = pd.DataFrame(dict_weight_loss).T
-    return df_w_l
-    
-
-def graph_weight_loss_percentage(df,title='Title',x_label='X label', y_label = 'Y label',save=False,path_to_save='',show=False):
-    print("graph_weght_loss")
-    ax = df.loc[:,['Dead','Alive']].plot.bar(stacked=True,rot=0,color=['indianred','royalblue'],figsize=(14,8))
-    Alive = df['Alive'].values.tolist()
-    Dead = df['Dead'].values.tolist()
-    total = sum(Alive+Dead)
-    for index,p in enumerate(ax.patches):
-        if index < 5:
-            tota_in_p = round((Alive[index] + Dead[index])/total*100,1)
-            print(Alive[index])
-            print(Dead[index])
-            ax.annotate(str(round(Alive[index])), ((p.get_x()+0.19) , (Alive[index])/2 + Dead[index]-5))
-            ax.annotate(str(tota_in_p)+' %', ((p.get_x()+0.19) , Alive[index]+Dead[index]+2))
-        else:
-            ax.annotate(str(round(Dead[index-5])), ((p.get_x()+0.19) , Dead[index-5]/3))
-    ax.set_title(title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
-    if save:
-        plt.savefig(path_to_save)
-
-    if show:
-        plt.show()
-
-
-    w_l_p_graphique = False
-
-    if w_l_p_graphique:
-        
-        df_weight_loss_chronique = df[df['Infection'].isin(['C. albicans','Staphylococcus aureus','H1N1'])]
-        df_weight_loss_acute = df[df['Infection'].isin(['S. pneumoniae','E. coli','Listeria'])]
-        df_weight_loss_Training = df[df['Experiment'].str.contains('Training')]
-        
-        df_training_wl = weight_loss_percentage(df_weight_loss_Training,[0.15,0.20,0.25,0.30])
-        df_chronique_wl = weight_loss_percentage(df_weight_loss_chronique,[0.15,0.20,0.25,0.30])
-        df_acute_wl = weight_loss_percentage(df_weight_loss_acute,[0.15,0.20,0.25,0.30])
-        graph_weight_loss_percentage(df_wl_p,title="Survivability of mice at end of experiments in function of weight loss\n ALL",
-        x_label='weight loss',y_label='Survivability',save=False,path_to_save='./graphiques/basic_stats/bar_aLL_absolute_values',show=False) #ALL EXPERIMENT
-        
-        #graph_weight_loss_percentage(df_training_wl,title="Survivability of mice at end of experiments in function of weight loss\n TRAINING",
-        #x_label='weight loss',y_label='Survivability',save=True,path_to_save='./graphiques/basic_stats/bar_training_absolute_values',show=True)#TRAINING
-        
-        #graph_weight_loss_percentage(df_acute_wl,title="Survivability of mice at end of experiments in function of weight loss\n ACUTE",
-        #x_label='weight loss',y_label='Survivability',save=True,path_to_save='./graphiques/basic_stats/bar_acute_absolute_values',show=True)#ACUTE
-        
-        #graph_weight_loss_percentage(df_chronique_wl,title="Survivability of mice at end of experiments in function of weight loss\n CHRONIQUE",
-        #x_label='weight loss',y_label='Survivability',save=True,path_to_save='./graphiques/basic_stats/bar_chronique_absolute_values',show=True)#CHRONIQUE
-    """
