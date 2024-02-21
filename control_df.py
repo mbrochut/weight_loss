@@ -16,28 +16,6 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def hyperlink_list(path,column=8,sheet_name="Feuil1"):
-    """
-    Open an excel file and keep all the hyperlink of choosen columns (default = 8) in a list 
-
-    *Arguments*
-    -path: path to excel file
-    -column: column containing hperlinks
-
-    *Return*
-    -list of hyperlink
-    """
-    wb = openpyxl.load_workbook(path)
-    ws = wb.get_sheet_by_name(sheet_name)
-    links = []
-    for i in range(2, ws.max_row + 1):  # 2nd arg in range() not inclusive, so add 1
-        if isinstance(ws.cell(row=i, column=column).value,str):
-            links.append(ws.cell(row=i, column=column).hyperlink.target)
-        else:
-            continue
-    return links
-
-
 def end_of_experiment(df):
     """
     Open the original DF with "-" as experiment separator and return the list of index for each separator 
@@ -136,11 +114,11 @@ def controle_time_pre_traitement(df):
     print(f"{bcolors.HEADER}TEST CONTROL TIME PRE TREATMENT:{bcolors.ENDC}")
     group = df.groupby(['ID_Experiment','Group'])
     check = True
-    for experiment in group:
-        unique_date = experiment[1]['Time_pre_traitment'].value_counts()
+    for index, experiment in group:
+        unique_date = experiment['Time_pre_traitment'].unique()
         if len(unique_date) >= 2:
             print("PROBLEM TIME IN PRE-TREATMENT")
-            print(experiment[1].head(1))
+            print(experiment.head(1))
             print(unique_date)
             check = False
     if check:
@@ -320,25 +298,6 @@ def control_length_of_time_point(df,column_name='Time_point'):
     else:
         print(f"{bcolors.FAIL}NOT PASS{bcolors.ENDC}")
 
-def add_hyperlink(filename,result_filenamee,links=[],column='K'):
-    """
-    Open an excel file and add a list of hyperlink to the file
-
-    *Arguments*
-    -filename: path to excel file to add hypelink
-    -result_filenamee: path of result filename
-    -links: list of hyperlink
-
-    *Return*
-    save an excel file name "result_filenamee".
-    """
-    print("ADD HYPERLINK TO FILE")
-    wb = load_workbook(filename = filename)
-    ws = wb.active
-    for index, value in enumerate(ws[column][1:]):
-        value.hyperlink = links[index]
-        value.style = 'Hyperlink'
-    wb.save(filename = result_filenamee)
 
 def convert_time_point_in_str_format(df,column='Time_point'):
     """
@@ -357,15 +316,27 @@ def convert_time_point_in_str_format(df,column='Time_point'):
         list_dt += [dt]
     df[column] = list_dt
 
+def string_to_list(s):
+        if '-' in s:
+            return []
+        elif '[' in s:
+            s = s.replace("nan", "0.0")
+            return ast.literal_eval(s)
+        else:
+            return [float(x.strip()) for x in s.split(',')]
+
+def convert_scores_in_list_format(df):
+    df['Scores'] = df['Scores'].apply(string_to_list)
+    return df
+
 if __name__ == '__main__':
 
-    path = "./weight_all_mice_manual_formating_CLEAN_2023_hypothesis.xlsx"
+    path = "./data/raw_data.xlsx"
     df = pd.read_excel(path) #read an excel file
-    links = hyperlink_list(path,column=9) #keep in memory the hyperlink of the cells
 
     index_end = end_of_experiment(df)
     col_experiment = create_index_experiment(index_end,length_df=len(df))
-    df = df.dropna(subset=['Folder']) # remove column with no informations (column with "-" separator)
+    df = df.dropna(subset=['Strain']) # remove column with no informations (column with "-" separator)
     df = df.reset_index(drop=True) #reset index
     df.insert(loc=0,column='ID_Experiment',value=col_experiment) #Add the Experiment ID for each mouse
     
@@ -392,9 +363,8 @@ if __name__ == '__main__':
     convert_time_point_in_str_format(df)
     control_length_of_time_point(df)
 
-    
-    name_to_export = 'cleaned_df/good_date_format_clean_2023_with_H0.xlsx'
+    df = convert_scores_in_list_format(df)
+    df = df[df['Infection'].isin(['C. albicans','S. pneumoniae','Listeria',"H1N1"])]
+    name_to_export = 'data/weight_loss_raw_data.xlsx'
     df.to_excel(name_to_export)
-    add_hyperlink(name_to_export,name_to_export,links)
-    
     
