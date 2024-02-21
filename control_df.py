@@ -365,6 +365,6 @@ if __name__ == '__main__':
 
     df = convert_scores_in_list_format(df)
     df = df[df['Infection'].isin(['C. albicans','S. pneumoniae','Listeria',"H1N1"])]
-    name_to_export = 'data/weight_loss_raw_data.xlsx'
+    name_to_export = 'data/weight_loss_raw_data_clean.xlsx'
     df.to_excel(name_to_export)
     

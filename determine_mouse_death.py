@@ -2,25 +2,6 @@ import pandas as pd
 import numpy as np
 from control_df import control_length_of_time_point, convert_time_point_in_str_format
 
-def keep_only_first_string_element(x):
-    """
-    Find the first string element in a serie containing mouse weight (float) and delete all elements after the found string
-    If there is no string, do nothing
-    *Arguments*
-    -x: serie object (pandas object)
-
-    *Return*
-    x: serie object (pandas object)
-    """
-    to_keep = ['dead','sacrified','survive']
-    index_first_element = x[x.isin(to_keep)].index.values
-    if len(index_first_element)>1:
-        x.loc[index_first_element[1]:]=np.nan
-        return x
-    else:
-        return x
-
-
 
 def add_time(x,last_time):
     """
@@ -60,8 +41,6 @@ def add_time(x,last_time):
         return time.days + 1.5
 
 
-def find_original_date_of_death(x):
-    last_index = x.index.get_loc(x.last_valid_index())
 
 def add_survival(x,last_time):
     """
@@ -92,7 +71,7 @@ def add_survival(x,last_time):
 
 def survival_time_percentage_weight(x,percentage):
     """
-    keep data untile a specific weight loss ou a mouse
+    keep data untile a specific weight loss on a mouse (threshold of sacrifice)
     If a mouse lose a given percentage of its weight during the experiment, datas are kept until the threshold.
     The percentage of weight loss is calculated reltively to the time of infection
     *Arguments*
@@ -166,35 +145,13 @@ def multiple_percentage_weigth(df,list_percentage):
     print(df)
     return df_result
 
-def text_formating(df):
-    """
-    remove/replace Unnecessary string in df
-    Code cleaning to keep only specific string: "dead, sacrified, survive"
-    *Arguments*
-    -df: dataframe object
-
-    *Return*
-    nothing, but clean the passed df
-    """
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].applymap(lambda s:s.lower() if isinstance(s, str) else s) #remove all uppercase in the dataframe
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace(0,np.nan) # replace value 0 by np.nan 
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace('no data',np.nan) # replace string "no data" by np.nan 
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace(r'\n',' ', regex=True) #replace all "\n" in df by spaces
-    replace_dict = {r'(^.*dead.*$)|(^.*dcd.*$)':'dead'}
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace(replace_dict,regex=True) #replcae all instaces containing the world dead or dcd to "dead"
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace({'x':'dead','dec':'dead','d':'dead'}) #replcae all instaces containing the world x, dec, or d to "dead"
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace(regex={r'(^.*no weight.*$)':np.nan}) #replace world "no weight" by nan
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].replace(regex={r'(^.*sac.*$)': 'sacrified', 'scf': 'sacrified','moribond':'sacrified'}) #replace word containing sac/scf/moribond to sacrifice
-    list_key_world =['dead','sacrified','survive',"ane"]
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].applymap(lambda x : x if x in list_key_world or isinstance(x,float) or isinstance(x,int) else np.nan) #only keep string contained in list_key_world, otherwise nan
-    df.loc[:,"weight_T_infection":] = df.loc[:,"weight_T_infection":].apply(lambda x : keep_only_first_string_element(x),axis=1) #if a mouse have multiple string element (dead, sacrifief,survive), only keep the first one
 
 
 def format_df_for_p_values(df, end_of_df_column_name = 'weight_T32'):
     """
     Add a column: max_loss_weight_percentage. Compute the maximum loss weight percentage of each mouse during the experiment.
-    Invert Group name: Inside the column Group, if the name is a string, it will invert the name. Example: 0A --> A0
-    Add column: exp. Take the first value if it's a string, otherwise the same value. Example: A0 --> A; 1 --> 1
+    Add column: exp. Take the first value if it's a string, otherwise the same value. Example: 1A --> 1 example 2: 4 --> 4
+    Add column: sub_exp. Take the second value if it's a string, otherwise put "no". Example: 1A --> A example 2: 4 --> no
     *Arguments*
     -df: dataframe object
     -end_of_df_column_name:
@@ -203,7 +160,6 @@ def format_df_for_p_values(df, end_of_df_column_name = 'weight_T32'):
     """
 
     df['max_loss_weight_percentage'] = df.loc[:,'weight_T1':end_of_df_column_name].apply(lambda x: pd.to_numeric(x, errors='coerce')).min(axis=1)/df['weight_T_infection']
-    #df['Group'] = df['Group'].apply(lambda x: x[1]+x[0] if isinstance(x,str) else x)
     df['exp'] = df['Group'].apply(lambda x:int(x[0]) if isinstance(x,str) else x)
     df['sub_exp'] = df['Group'].apply(lambda x:x[1] if isinstance(x,str) else "no")
 
@@ -228,88 +184,39 @@ def longer_than_N_days(x,N=14):
 
 
 
-
-
 if __name__ == '__main__':
-    print("DEBUT DU PROGRAMME")
-    df = pd.read_excel("cleaned_df/good_date_format_clean_2023_with_H0.xlsx",index_col=0,parse_dates=True)
- 
-    text_formating(df)
+    #LOAD DATA
+    df = pd.read_excel("./data/weight_loss_raw_data.xlsx",index_col=0)
 
-    serie_dates = df['Time_point'].apply(lambda x: pd.to_datetime(x.split(','),dayfirst=True))
-    df.insert(loc=14,column='Dates',value=serie_dates)
+    # transform str in DateTimeIndex of Time_point column
+    serie_dates = df['Time_point'].apply(lambda x: pd.to_datetime(x.split(', '),dayfirst=True))
+    index_to_insert_after = df.columns.get_loc("Time_point") # Get the index of the column to insert after
+    df.insert(loc=index_to_insert_after+1,column='Dates',value=serie_dates) # add new column Dates that is a DateTimeIndex of Time_point column
+    
+    # ADD a column that is the last valid index (i.e not a NaN) for further analysis (to compute survival time)
     last_valid_index_original= df.apply(lambda x: x.index.get_loc(x.last_valid_index())+1,axis=1) #!!!add one as we will add a new column before!!!
-    df.insert(loc=14,column='last_valid_index_original',value=last_valid_index_original)
-
+    df.insert(loc=index_to_insert_after+2,column='last_valid_index_original',value=last_valid_index_original)
 
     #remove data longer than N days, by default 14 days after infection
-    KEEP_N_DAYS = True
-    if KEEP_N_DAYS:
-
-        df_Max14days = df.apply(lambda x: longer_than_N_days(x,14),axis=1)
-        df_Max14days = df_Max14days.dropna(axis=1,how='all')
-        control_length_of_time_point(df_Max14days,'Dates')
-        df_Max14days["last_valid_index_original"]= df_Max14days.apply(lambda x: x.index.get_loc(x.last_valid_index()),axis=1)
-        #df_Max14days.to_excel('./df_max14days_2023_time_correction.xlsx')
-
-    
-    
-    
-    
+    df_Max14days = df.apply(lambda x: longer_than_N_days(x,14),axis=1)
+    df_Max14days = df_Max14days.dropna(axis=1,how='all')
+    df_Max14days["last_valid_index_original"]= df_Max14days.apply(lambda x: x.index.get_loc(x.last_valid_index()),axis=1)
+    #df_Max14days.to_excel('./data/max_14_days.xlsx')
+        
     #ADD TIME AND SURVIVAL FOR EACH PERCENTAGE, FEW MINUTES TO RUN
-    ADD_PERCENTAGE = True
-
-    
-    if ADD_PERCENTAGE:
-        #-------WARNING-------
-        #BE CAREFUL OF DATAFRAME USED!! DF_MAX14DAYS OR DF!!
-        #-------WARNING-------
-        time, survie = add_survival_and_time(df_Max14days)
-        name_last_col = df_Max14days.columns.values[-1]
-        print(name_last_col)
-        PERCENTAGES = np.arange(0.3,0.04,-0.01)
-        #percentage_testing = [0.3,0.15,0.05]
-        df_result = multiple_percentage_weigth(df_Max14days,PERCENTAGES)
-        df_result['time_original'] = time
-        df_result['survival_original'] = survie
-        df_result['Time_point'] = serie_dates
-    
-        #CONVERT TIME_POINT IN BETTER FORMAT
-        convert_time_point_in_str_format(df_result)
-        format_df_for_p_values(df_result,end_of_df_column_name=name_last_col)
-        df_result.to_excel("./DF_for_simulation/df_2023_max14days_new_time_calculation_H0.xlsx")
-
-    """#testing dates
-    df_TEST = pd.read_excel("./testing/df_for_testing.xlsx",parse_dates=True,sheet_name="home_made")
-    text_formating(df_TEST)
-
-    serie_dates = df_TEST['Time_point'].apply(lambda x: pd.to_datetime(x.split(','),dayfirst=True))
-    df_TEST.insert(loc=14,column='Dates',value=serie_dates)
-    last_valid_index_original= df_TEST.apply(lambda x: x.index.get_loc(x.last_valid_index())+1,axis=1) #!!!add one as we will add a new column before!!!
-    df_TEST.insert(loc=14,column='last_valid_index_original',value=last_valid_index_original)
-    print(df_TEST['last_valid_index_original'])
-    dates = df_TEST.loc[0,'Dates']
-    time_infeciton = df_TEST.loc[0,'Time_infection']
-    print(dates)
-    print(time_infeciton)
-    first_date_after_infection = dates[dates > time_infeciton][0]
-    #print(dates[0]+dates)
-    initial_time = first_date_after_infection - time_infeciton
-    print(first_date_after_infection)
-    print(initial_time)
-
-    time, survie = add_survival_and_time(df_TEST)
-    name_last_col = df_TEST.columns.values[-1]
+    time, survie = add_survival_and_time(df_Max14days)
+    name_last_col = df_Max14days.columns.values[-1]
     print(name_last_col)
     PERCENTAGES = np.arange(0.3,0.04,-0.01)
     #percentage_testing = [0.3,0.15,0.05]
-    df_result = multiple_percentage_weigth(df_TEST,PERCENTAGES)
+    df_result = multiple_percentage_weigth(df_Max14days,PERCENTAGES)
     df_result['time_original'] = time
     df_result['survival_original'] = survie
     df_result['Time_point'] = serie_dates
 
-    #CONVERT TIME_POINT IN BETTER FORMAT
+    #CONVERT TIME_POINT IN BETTER FORMAT AND ADD INFORMATION ON SUB EXPERIMENTS
     convert_time_point_in_str_format(df_result)
     format_df_for_p_values(df_result,end_of_df_column_name=name_last_col)
-    df_result.to_excel("./testing/test_change_time_calculation.xlsx")"""
+    df_result.to_excel("./data/df_for_analysis.xlsx")
+
 
