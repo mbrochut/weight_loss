@@ -1,7 +1,22 @@
 import pandas as pd
 import numpy as np
-from control_df import control_length_of_time_point, convert_time_point_in_str_format
 
+def convert_time_point_in_str_format(df,column='Time_point'):
+    """
+    Change datetimeIndex inside the list of column "Time_point" into string separate by comma for a better export
+    
+    *Arguments*
+    -df: dataframe object
+
+    *Return*
+    nothing, but change the column "Time_point" in the df (list[string] --> string: date_1, date_2, ..., date_n)
+    """
+    list_dt = []
+    for dates in df[column]:
+        dt = dates.strftime("%d-%m-%Y")
+        dt = ', '.join(dt.values.tolist())
+        list_dt += [dt]
+    df[column] = list_dt
 
 def add_time(x,last_time):
     """
