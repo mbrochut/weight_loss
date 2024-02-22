@@ -211,6 +211,7 @@ if __name__ == '__main__':
     columns_time = [columns_time[-1]] + columns_time[:-1]
     columns_survival = [columns_survival[-1]] + columns_survival[:-1]
 
+    # DECOMMENT TO ANALYZE POWER IN HOUSE
     
     # For one model
     # analyse_per_model(df,columns_time,columns_survival,path_to_export="./results/in_house/Listeria.xlsx")
