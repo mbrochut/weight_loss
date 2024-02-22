@@ -70,7 +70,6 @@ if __name__ == "__main__":
 
     #READ DF
     df = pd.read_excel("./DF_for_simulation/df_2023_max14days_new_time_calculation_H0.xlsx")
-    df = df[df['Group']!=-1] # remove datas that are not infected
     #DATA FOR ANALYZE
     #PREPARE DF FOR ANALYSIS, change dates column to datetimindex and transform weight datas to numeric only
     df.loc[:,"weight_T_infection":"weight_T14"] = df.loc[:,"weight_T_infection":"weight_T14"].apply(pd.to_numeric,errors='coerce')

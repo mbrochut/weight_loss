@@ -111,13 +111,12 @@ def automatic_simulation_per_infection_fix_mice(df,N_simulation,N_repetition,col
 if __name__ == '__main__':
     print('SIMULATION ANALYSIS')
 
-    df = pd.read_excel('./DF_for_simulation/df_2023_max14days_new_time_calculation_H0.xlsx',index_col=0)
+    df = pd.read_excel('./data/df_for_analysis.xlsx',index_col=0)
     df['Time_infection'] = df['Time_infection'].dt.strftime("%Y-%m-%d")
     df['Time_point'] = df['Time_point'].apply(lambda x: pd.to_datetime(x.split(','),dayfirst=True,exact=False))
    
-    #remove lethal dose AND NOT INFECTED MICE (-1 IN GROUP)
+    #remove lethal dose
     df = df[~df['Experiment'].str.contains("/LD")]
-    df = df[df['Group']!=-1] #around 100 animals --> staph experiments
     #Dataset for Article
     infection_of_interest = ["C. albicans","Listeria","S. pneumoniae","H1N1","E. coli","Pseudomonas aeruginosas","Staphylococcus aureus"]
 
