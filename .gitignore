@@ -27,9 +27,7 @@ share/python-wheels/
 MANIFEST
 
 #FOLDERS
-autre/
-historique_df/
-graphiques/
+old_code/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
