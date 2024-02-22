@@ -233,5 +233,3 @@ if __name__ == '__main__':
     convert_time_point_in_str_format(df_result)
     format_df_for_p_values(df_result,end_of_df_column_name=name_last_col)
     df_result.to_excel("./data/df_for_analysis.xlsx")
-
-
