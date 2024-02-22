@@ -162,7 +162,7 @@ if __name__ == "__main__":
     kaplanMeier = False
     kaplanMeierTotal = False
     simulation_variable_N = False
-    simulation_fix_N = True
+    simulation_fix_N = False
     animated_image = False
 
     
