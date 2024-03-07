@@ -193,15 +193,15 @@ def longer_than_N_days(x,N=14):
     dt = x.Time_infection +pd.Timedelta("{} days".format(N)) #date maximal of recorded datas (datetime object)
     closest_date_after_Ndays = x.Dates.get_indexer([dt], method='nearest')[0] #found the closest date in the serie x of the maximal date (dt)
     last_valid_index = x.index.get_loc('weight_T_infection') + closest_date_after_Ndays #found the maximal index in the serie
-    x.iloc[last_valid_index+1:] = np.nan #remove unnecessary datas until the last authorized index
-    x['Dates'] = x['Dates'][0:closest_date_after_Ndays+1] #remove unnecessary datas until the last authorized index in Dates column (Datetimeindex)
+    x.iloc[last_valid_index:] = np.nan #remove unnecessary datas until the last authorized index
+    x['Dates'] = x['Dates'][0:closest_date_after_Ndays] #remove unnecessary datas until the last authorized index in Dates column (Datetimeindex)
     return x 
 
 
 
 if __name__ == '__main__':
     #LOAD DATA
-    df = pd.read_excel("./data/weight_loss_raw_data.xlsx",index_col=0)
+    df = pd.read_excel("./data/weight_loss_raw_data.xlsx")
 
     # transform str in DateTimeIndex of Time_point column
     serie_dates = df['Time_point'].apply(lambda x: pd.to_datetime(x.split(', '),dayfirst=True))
@@ -225,6 +225,7 @@ if __name__ == '__main__':
     PERCENTAGES = np.arange(0.3,0.04,-0.01)
     #percentage_testing = [0.3,0.15,0.05]
     df_result = multiple_percentage_weigth(df_Max14days,PERCENTAGES)
+    df_result = df_Max14days
     df_result['time_original'] = time
     df_result['survival_original'] = survie
     df_result['Time_point'] = serie_dates
