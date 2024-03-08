@@ -201,7 +201,7 @@ def longer_than_N_days(x,N=14):
 
 if __name__ == '__main__':
     #LOAD DATA
-    df = pd.read_excel("./data/weight_loss_raw_data.xlsx")
+    df = pd.read_excel("./data/weight_loss_raw_data.xlsx",index_col=0)
 
     # transform str in DateTimeIndex of Time_point column
     serie_dates = df['Time_point'].apply(lambda x: pd.to_datetime(x.split(', '),dayfirst=True))
