@@ -172,7 +172,6 @@ def analyse_per_model(df, columns_time, columns_survival, model="Listeria", path
     
     # Initialize an empty dictionary to store the results
     result = {}
-    
     # Iterate over the columns of time and survival
     for col_time, col_survival in zip(columns_time, columns_survival):
         # Extract the name from the column name
@@ -217,5 +216,6 @@ if __name__ == '__main__':
     # analyse_per_model(df,columns_time,columns_survival,path_to_export="./results/in_house/Listeria.xlsx")
 
     # for all models
-    """for model in ['C. albicans','S. pneumoniae','Listeria',"H1N1"]:
-        analyse_per_model(df,columns_time,columns_survival,model=model,path_to_export=f"./results/in_house/{model}.xlsx")"""
+
+    for model in ['C. albicans','S. pneumoniae','Listeria',"H1N1"]:
+        analyse_per_model(df,columns_time,columns_survival,model=model,path_to_export=f"./results/in_house/{model}.xlsx")

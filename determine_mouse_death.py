@@ -225,7 +225,6 @@ if __name__ == '__main__':
     PERCENTAGES = np.arange(0.3,0.04,-0.01)
     #percentage_testing = [0.3,0.15,0.05]
     df_result = multiple_percentage_weigth(df_Max14days,PERCENTAGES)
-    df_result = df_Max14days
     df_result['time_original'] = time
     df_result['survival_original'] = survie
     df_result['Time_point'] = serie_dates
