@@ -31,4 +31,4 @@ To run the analysis:
 
 ## License
 
-This project is licensed under the [GNU GPLv3] License - see the [LICENSE](https://choosealicense.com/licenses/gpl-3.0/) file for details.
+This project is licensed under the [GNU GPLv3] License - see the [LICENSE](license.txt) file for details.
